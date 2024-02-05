@@ -6,6 +6,10 @@ import os, re, shutil
 console = Console()
 
 def create_folder(directory):
+    """Create folder in directory
+
+    param directory: The target directory the user wishes to create a folder
+    """
     
     while True:
         
@@ -46,7 +50,9 @@ def create_folder(directory):
             return
         
 def deleted_user():
-    
+    """
+    Moves deleted user1 files into a temporary folder
+    """
     
     user_folder = r'assets\user-docs\user1'
     temp_folder = "assets\\user-docs\\user1Temp"
@@ -68,6 +74,11 @@ def deleted_user():
         return
 
 def document_sort(source_directory):
+    """
+    Sorts .log and .mail files in user2
+
+    param source_directory: Used for testing, the directory is used to point the way to user2
+    """
     
     user_directory = os.path.join(source_directory, "user2")
     
@@ -97,8 +108,54 @@ def document_sort(source_directory):
             shutil.move(file_path, email_directory)
             print(f"Moved {filename} to mail folder.")
 
-def log_file():
-    pass
+def log_file(target_directory, logs_directory):
+    
+    for log_filename in os.listdir(logs_directory):
+        
+        if log_filename.endswith('.txt'):
+            log_file_path = os.path.join(logs_directory, log_filename)
+            
+            os.makedirs(target_directory, exist_ok=True)
+            
+            errors_log_path = os.path.join(target_directory, 'errors.log')
+            warnings_log_path = os.path.join(target_directory, 'warnings.log')
+            
+            with open(log_file_path, 'r') as log_file:
+                lines = log_file.readlines()
+            
+            with open(errors_log_path, 'a') as errors_file, open(warnings_log_path, 'a') as warnings_file:
+                for line in lines:
+                    if "ERROR" in line:
+                        errors_file.write(line)
+                    elif "WARNING" in line:
+                        warnings_file.write(line)
+            
+            print(f"Processed {log_filename}: Errors and warnings have been parsed and saved to {target_directory}")
+            
+def count_file_types(directory, extensions):
+    
+    """
+    Counts files in the given directory based on the specified extensions.
+    
+    :param directory: The directory to scan.
+    :param extensions: A list of file extensions to count, e.g., ['.txt', '.jpg'].
+    """
+    
+    count = {ext: 0 for ext in extensions}
+    try:
+        for filename in os.listdir(directory):
+            _, ext = os.path.splitext(filename)
+            if ext in extensions:
+                count[ext] += 1
+                
+    except FileNotFoundError:
+        
+        console.print(f"The directory '{directory}' was not found.", style="bold red")
+        return
+
+    for ext, num in count.items():
+        console.print(f"Number of '{ext}' files: {num}", style="bold green")
+
     
 
 def main():
@@ -106,8 +163,8 @@ def main():
     console.print("Howdy Pardner")
     
     while True:
-        console.print("\n1. Create folder\n2. Deleted Users\n3. Document Sorting\n4. Check Log File\n5. Exit")
-        choice = Prompt.ask("What will it be pardner? : ", choices=['1', '2', '3', '4', '5'], default='5')
+        console.print("\n1. Create folder\n2. Deleted Users\n3. Document Sorting\n4. Check Log File\n5. Count Files\n6. Exit")
+        choice = Prompt.ask("What will it be pardner? : ", choices=['1', '2', '3', '4', '5', '6'], default='6')
         
         try:
             
@@ -120,13 +177,21 @@ def main():
                 source_directory = r'assets\user-docs'
                 document_sort(source_directory)
             elif choice == '4':
-                log_file()
+                target_directory = r"assets\user-docs\user2\log"
+                logs_directory = r"assets\user-docs\user2\log"
+                log_file(target_directory, logs_directory)
             elif choice == '5':
-                exit()
+                directory = Prompt.ask("Enter the directory to count file types in: ")
+                extensions_input = Prompt.ask("Enter the file extensions to count, separated by commas (e.g., .txt,.jpg): ")
+                extensions = [ext.strip() for ext in extensions_input.split(',')]
+                count_file_types(directory, extensions)
+            elif choice == '6':
+                console.print("Ok see you later.")
+                break
             else:
                 console.print("Not sure what you did there but I'm going to keep you here")
+                
         except ValueError:
             console.print("Why are you trying to be difficult, I'm just trying to help!")
-        
-    
+
 main()
